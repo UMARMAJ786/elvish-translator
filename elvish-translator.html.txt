@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elvish Translator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .content {
+            width: 100%;
+            background-color: white;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .textarea-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: none;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output {
+            width: 100%;
+            padding: 15px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            min-height: 100px;
+            font-size: 16px;
+            word-wrap: break-word;
+            box-sizing: border-box;
+        }
+        .footer {
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background-color: #f4f4f9;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            Elvish Translator
+        </div>
+        <div class="content">
+            <div class="textarea-container">
+                <textarea id="input-text" placeholder="Enter English text..."></textarea>
+                <button onclick="translateText()">Translate</button>
+            </div>
+            <div id="output-text" class="output"></div>
+        </div>
+        <div class="footer">
+            Powered by Elvish Language Generator
+        </div>
+    </div>
+
+    <script>
+        // Core vocabulary inspired by Turkish, Arabic, Albanian, and Elvish
+        const initialVocabulary = [
+            { english: "hello", translated: "selamêth" },
+            { english: "friend", translated: "mellonir" },
+            { english: "good", translated: "mirë" },
+            { english: "morning", translated: "dita" },
+            { english: "night", translated: "laylatun" },
+            { english: "fire", translated: "ashkar" },
+            { english: "water", translated: "ujëdras" },
+            { english: "earth", translated: "dhorim" },
+            { english: "air", translated: "havêryn" },
+            { english: "peace", translated: "sulthâni" }
+        ];
+
+        // Load custom vocabulary from localStorage
+        let customVocabulary = JSON.parse(localStorage.getItem('customVocabulary')) || {};
+        let lastUpdateDate = localStorage.getItem('lastUpdateDate') || null;
+        let lastVocabularyExpansion = localStorage.getItem('lastVocabularyExpansion') || 0;
+        
+        // Function to generate new words using transformations
+        function transformWord(word) {
+            return word
+                .replace(/a/g, 'â')
+                .replace(/e/g, 'ê')
+                .replace(/i/g, 'î')
+                .replace(/o/g, 'ô')
+                .replace(/u/g, 'û')
+                .replace(/th/g, 'z')
+                .replace(/c/g, 'k')
+                .replace(/g/g, 'gh')
+                .replace(/r/g, 'rûn')
+                .replace(/l/g, 'lî')
+                .replace(/d/g, 'dh')
+                .replace(/b/g, 'bh')
+                .replace(/s/g, 'sh');
+        }
+
+        // Function to expand vocabulary by 100 words
+        function expandVocabulary() {
+            if (!lastUpdateDate) {
+                lastUpdateDate = new Date().toISOString().split('T')[0];
+                localStorage.setItem('lastUpdateDate', lastUpdateDate);
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const daysPassed = Math.floor((new Date(today) - new Date(lastUpdateDate)) / (1000 * 60 * 60 * 24));
+
+            // If a new day has passed, expand vocabulary by 100 words
+            if (daysPassed > 0) {
+                for (let i = 0; i < 100; i++) {
+                    const word = `newword${lastVocabularyExpansion + i + 1}`;
+                    const transformedWord = transformWord(word);
+                    customVocabulary[word] = transformedWord;
+                }
+
+                // Update date and vocabulary count
+                lastUpdateDate = today;
+                lastVocabularyExpansion += 100;
+                localStorage.setItem('lastUpdateDate', lastUpdateDate);
+                localStorage.setItem('lastVocabularyExpansion', lastVocabularyExpansion);
+                localStorage.setItem('customVocabulary', JSON.stringify(customVocabulary));
+            }
+        }
+
+        // Function to translate text
+        function translateText() {
+            const inputText = document.getElementById('input-text').value.toLowerCase().trim();
+            if (!inputText) {
+                alert('Please enter some text.');
+                return;
+            }
+
+            // Expand the vocabulary if necessary
+            expandVocabulary();
+
+            const words = inputText.split(' ');
+            let translatedText = '';
+
+            for (let word of words) {
+                // Check in the base vocabulary
+                let translatedWord = null;
+                for (let item of initialVocabulary) {
+                    if (word === item.english) {
+                        translatedWord = item.translated;
+                        break;
+                    }
+                }
+
+                // If not found, check in the custom vocabulary
+                if (!translatedWord && customVocabulary[word]) {
+                    translatedWord = customVocabulary[word];
+                }
+
+                // If still not found, apply transformation
+                if (!translatedWord) {
+                    translatedWord = transformWord(word);
+                    customVocabulary[word] = translatedWord;
+                    localStorage.setItem('customVocabulary', JSON.stringify(customVocabulary));
+                }
+
+                translatedText += translatedWord + ' ';
+            }
+
+            document.getElementById('output-text').innerText = translatedText.trim();
+        }
+    </script>
+</body>
+</html>
